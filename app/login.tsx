@@ -1,4 +1,4 @@
-/*import { View, Text, TextInput, Button, StyleSheet } from "react-native"
+import { View, Text, TextInput, Button, StyleSheet } from "react-native"
 import { useState } from "react"
 import { useRouter } from "expo-router"
 import { useAuth } from "../src/auth/useAuth"
@@ -14,15 +14,13 @@ export default function Login() {
     async function handleLogin() {
         try {
             await login(username, password)
-            router.replace("/") // ¦^¨ì index.tsx
+            router.replace("/") // å›žåˆ° index.tsx
         } catch {
-            setError("µn¤J¥¢±Ñ")
+            setError("Login Failed")
         }
     }
 
     return (
-        <View />
-        
         <View style={styles.container}>
             <Text style={styles.title}>FlightTicketTracker</Text>
 
@@ -31,6 +29,8 @@ export default function Login() {
                 value={username}
                 onChangeText={setUsername}
                 style={styles.input}
+                autoCapitalize="none" // é—œé–‰è‡ªå‹•å¤§å¯«
+                autoCorrect={false}   // é—œé–‰è‡ªå‹•ä¿®æ­£
             />
 
             <TextInput
@@ -39,11 +39,13 @@ export default function Login() {
                 onChangeText={setPassword}
                 secureTextEntry
                 style={styles.input}
+                autoCapitalize="none"
+                autoCorrect={false}
             />
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
 
-            <Button title="µn¤J" onPress={handleLogin} />
+            <Button title="Login" onPress={handleLogin} />
         </View>
     )
 }
@@ -69,13 +71,3 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
 })
-*/
-
-import { View, Text } from "react-native";
-export default function Login() {
-    return (
-        <View style={{ flex: 1, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' }}>
-            <Text>´ú¸Õ­¶­±</Text>
-        </View>
-    );
-}

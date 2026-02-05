@@ -1,9 +1,14 @@
-import { Text, View } from "react-native"
+import { Redirect } from "expo-router"
+import { useAuth } from "../src/auth/useAuth"
 
 export default function Index() {
-    return (
-        <View>
-            <Text>OK</Text>
-        </View>
-    )
+    const { isAuthenticated, loading } = useAuth()
+
+    if (loading) return null
+
+    if (!isAuthenticated) {
+        return <Redirect href="/login" />
+    }
+
+    return <Redirect href="/flights" />
 }
