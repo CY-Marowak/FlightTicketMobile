@@ -1,7 +1,7 @@
 import { View, Text, TextInput, Button, StyleSheet } from "react-native"
 import { useState } from "react"
 import { useRouter } from "expo-router"
-import { useAuth } from "../src/auth/useAuth"
+import { useAuth } from "../../src/auth/useAuth"
 
 export default function Login() {
     const { login } = useAuth()
