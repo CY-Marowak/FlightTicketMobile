@@ -7,8 +7,8 @@ export default function Index() {
     if (loading) return null
 
     if (!isAuthenticated) {
-        return <Redirect href="/login" />
+        return <Redirect href="/auth" />
     }
 
-    return <Redirect href="/flights" />
+    return <Redirect href="/tabs/flights" />
 }

@@ -1,13 +1,12 @@
 import axios from "axios"
-import { getToken } from "../storage/token"
+import * as SecureStore from "expo-secure-store"
 
 const api = axios.create({
-    baseURL: "https://flightticketproject.onrender.com",
-    timeout: 10000
+    baseURL: process.env.EXPO_PUBLIC_API_BASE,
 })
 
 api.interceptors.request.use(async config => {
-    const token = await getToken()
+    const token = await SecureStore.getItemAsync("token")
     if (token) {
         config.headers.Authorization = `Bearer ${token}`
     }
