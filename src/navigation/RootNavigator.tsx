@@ -9,9 +9,9 @@ export function RootNavigator() {
     return (
         <Stack screenOptions={{ headerShown: false }}>
             {!isAuthenticated ? (
-                <Stack.Screen name="auth" />
+                <Stack.Screen name="(auth)" />
             ) : (
-                <Stack.Screen name="tabs" />
+                <Stack.Screen name="(tabs)" />
             )}
         </Stack>
     )
