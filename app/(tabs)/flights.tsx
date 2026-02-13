@@ -12,20 +12,23 @@ import {
     Platform
 } from "react-native"
 
-import { searchFlights } from "../../src/api/flights"
+import { searchFlights } from "../../src/api/searchFlights"
 import { Flight } from "../../src/types/flight"
+import { addTrackedFlight } from "../../src/api/trackedFlights"
+
 
 export default function FlightsPage() {
     // 預設搜尋值
     const [from, setFrom] = useState("TPE")
     const [to, setTo] = useState("OKA")
     const [depart, setDepart] = useState("2026-03-28")
-    const [returnDate, setReturnDate] = useState("2026-04-01")
+    const [returnDate, setReturnDate] = useState("2026-03-31")
 
     const [flights, setFlights] = useState<Flight[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [message, setMessage] = useState<string | null>(null)
+    const [trackingId, setTrackingId] = useState<string | null>(null)
 
     async function onSearch() {
         if (!from || !to || !depart) {
@@ -56,9 +59,32 @@ export default function FlightsPage() {
             setLoading(false)
         }
     }
+    async function onTrackFlight(flight: Flight) {
+        try {
+            setTrackingId(`${flight.airline}-${flight.flight_number}`)
+            //把前端的 from/to 同時映射給後端 SQL 需要的欄位名
+            const payload = {
+                ...flight,
+                from: flight.from,          // 滿足後端 required_fields 檢查
+                to: flight.to,
+                from_airport: flight.from,  // 滿足後端 SQL 寫入 (INSERT INTO)
+                to_airport: flight.to       // 滿足後端 SQL 寫入 (INSERT INTO)
+            };
 
-    // 關鍵 1: 將表單移至此函數，讓它成為 FlatList 的一部分
-    const renderSearchForm = () => (
+            await addTrackedFlight(payload as any);
+            alert(`成功追蹤 ${flight.airline} ${flight.flight_number}！`);
+
+        } catch (e) {
+            const errorMsg = e.response?.data?.error || "網路或伺服器錯誤";
+            alert(`加入失敗：${errorMsg}`);
+            //console.log("Error Detail:", e.response?.data);
+        } finally {
+            setTrackingId(null)
+        }
+    }
+
+
+    const searchFormHeader = (
         <View style={styles.formContainer}>
             <Text style={styles.headerTitle}>搜尋便宜機票</Text>
 
@@ -112,7 +138,7 @@ export default function FlightsPage() {
             {error && <Text style={styles.errorText}>{error}</Text>}
             {message && <Text style={styles.messageText}>{message}</Text>}
         </View>
-    )
+    );
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -120,28 +146,45 @@ export default function FlightsPage() {
             <FlatList
                 data={flights}
                 keyExtractor={(_, i) => i.toString()}
-                // 關鍵 2: 將搜尋表單設為 Header，這樣它就會跟著列表一起滑動
-                ListHeaderComponent={renderSearchForm}
-                // 增加底部間距，防止最後一個項目被 Tab Bar 擋住
+                ListHeaderComponent={searchFormHeader} // 使用變數
                 contentContainerStyle={{ paddingBottom: 40 }}
-                renderItem={({ item }) => (
-                    <View style={styles.flightCard}>
-                        <View style={styles.cardHeader}>
-                            <Text style={styles.routeText}>{item.from} → {item.to}</Text>
-                            <Text style={styles.airlineBadge}>{item.airline}</Text>
+                renderItem={({ item }) => {
+                    const isTracking = trackingId === `${item.airline}-${item.flight_number}`;
+                    return (
+                        <View style={styles.flightCard}>
+                            <View style={styles.cardHeader}>
+                                <Text style={styles.routeText}>{item.from} → {item.to}</Text>
+                                <Text style={styles.airlineBadge}>{item.airline}</Text>
+                            </View>
+
+                            <Text style={styles.flightInfo}>航班號：{item.flight_number}</Text>
+                            <Text style={styles.timeText}>時間：{item.depart_time} → {item.arrival_time}</Text>
+
+                            <View style={styles.cardBottom}>
+                                {/* 重點 2：移除 priceText 的 textAlign: "right"，改用 View 佈局 */}
+                                <Text style={styles.priceText}>NT$ {item.price.toLocaleString()}</Text>
+
+                                <TouchableOpacity
+                                    style={[styles.trackButton, isTracking && styles.trackButtonDisabled]}
+                                    onPress={() => onTrackFlight(item)}
+                                    disabled={isTracking}
+                                >
+                                    {isTracking ? (
+                                        <ActivityIndicator size="small" color="#fff" />
+                                    ) : (
+                                        <Text style={styles.trackButtonText}>追蹤價格</Text>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                        <Text style={styles.flightInfo}>{item.flight_number}</Text>
-                        <Text style={styles.timeText}>{item.depart_time} → {item.arrival_time}</Text>
-                        <Text style={styles.priceText}>NT$ {item.price.toLocaleString()}</Text>
-                    </View>
-                )}
-                // 如果沒有資料時顯示的文字
+                    );
+                }}
                 ListEmptyComponent={!loading && !error && !message ? (
                     <Text style={styles.emptyText}>請輸入條件並點擊搜尋</Text>
                 ) : null}
             />
         </SafeAreaView>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -156,10 +199,10 @@ const styles = StyleSheet.create({
         borderColor: "#f0f2f5", // 視覺分割線
     },
     headerTitle: {
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: "bold",
         marginBottom: 20,
-        color: "#1a1a1a",
+        color: "#000",
     },
     inputGroup: {
         marginBottom: 15,
@@ -190,6 +233,31 @@ const styles = StyleSheet.create({
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
+    },
+    cardBottom: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginTop: 15,
+        paddingTop: 10,
+        borderTopWidth: 1,
+        borderTopColor: "#f0f0f0",
+    },
+    trackButton: {
+        backgroundColor: "#34a853", // 綠色代表追蹤
+        paddingHorizontal: 15,
+        paddingVertical: 8,
+        borderRadius: 20,
+        minWidth: 90,
+        alignItems: "center",
+    },
+    trackButtonDisabled: {
+        backgroundColor: "#ccc",
+    },
+    trackButtonText: {
+        color: "#fff",
+        fontSize: 14,
+        fontWeight: "bold",
     },
     buttonText: {
         color: "#fff",
@@ -244,8 +312,6 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: "bold",
         color: "#d93025",
-        textAlign: "right",
-        marginTop: 10,
     },
     errorText: { color: "#d93025", marginTop: 15, textAlign: "center" },
     messageText: { color: "#666", marginTop: 15, textAlign: "center" },
