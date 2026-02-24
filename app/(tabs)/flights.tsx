@@ -62,7 +62,6 @@ export default function FlightsPage() {
     async function onTrackFlight(flight: Flight) {
         try {
             setTrackingId(`${flight.airline}-${flight.flight_number}`)
-            //把前端的 from/to 同時映射給後端 SQL 需要的欄位名
             const payload = {
                 ...flight,
                 from: flight.from,          // 滿足後端 required_fields 檢查
