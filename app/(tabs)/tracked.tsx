@@ -8,18 +8,22 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     Alert,
-    RefreshControl
+    RefreshControl,
+    Modal,
+    ScrollView
 } from "react-native"
 import { useFocusEffect } from "expo-router"
-import { getTrackedFlights, deleteTrackedFlight } from "../../src/api/trackedFlights"
+import { getTrackedFlights, deleteTrackedFlight, getPriceHistory } from "../../src/api/trackedFlights"
 import { TrackedFlight } from "../../src/types/flight"
+import { GlobalStyles } from "../../src/constants/Styles"
 
 export default function TrackedPage() {
     const [flights, setFlights] = useState<TrackedFlight[]>([])
     const [loading, setLoading] = useState(true)
     const [refreshing, setRefreshing] = useState(false)
+    const [history, setHistory] = useState<{ time: string, price: number }[]>([])
+    const [showHistory, setShowHistory] = useState(false)
 
-    // 載入資料
     const fetchFlights = async () => {
         try {
             const data = await getTrackedFlights()
@@ -59,16 +63,32 @@ export default function TrackedPage() {
         ])
     }
 
+    // 處理查看歷史
+    const handleViewHistory = async (id: number) => {
+        try {
+            const data = await getPriceHistory(id)
+            setHistory(data)
+            setShowHistory(true)
+        } catch (error: any) {
+            const msg = error.response?.data?.message || "目前尚無歷史票價"
+            Alert.alert("提示", msg)
+        }
+    }
+
     const renderItem = ({ item }: { item: TrackedFlight }) => (
         <View style={styles.card}>
-            <View style={styles.cardMain}>
+            <TouchableOpacity
+                style={styles.cardMain}
+                onPress={() => handleViewHistory(item.id)} // [點擊卡片查看歷史]
+            >
                 <View style={styles.header}>
                     <Text style={styles.route}>{item.from} → {item.to}</Text>
                     <Text style={styles.price}>NT$ {item.price.toLocaleString()}</Text>
                 </View>
                 <Text style={styles.info}>{item.airline} · {item.flight_number}</Text>
                 <Text style={styles.time}>{item.depart_time} → {item.arrival_time}</Text>
-            </View>
+                <Text style={styles.historyHint}>點擊查看追蹤以來價格趨勢 📈</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
                 style={styles.deleteBtn}
@@ -80,9 +100,10 @@ export default function TrackedPage() {
     )
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.titleContainer}>
-                <Text style={styles.title}>我的追蹤清單</Text>
+        <SafeAreaView style={GlobalStyles.safeArea}>
+
+            <View style={GlobalStyles.titleContainer}>
+                <Text style={GlobalStyles.pageTitle}>我的航班</Text>
             </View>
 
             {loading ? (
@@ -104,14 +125,33 @@ export default function TrackedPage() {
                     }
                 />
             )}
+            {/* 歷史票價 Modal */}
+            <Modal visible={showHistory} animationType="slide" transparent={true}>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>價格趨勢歷史</Text>
+                        <ScrollView style={{ maxHeight: 300 }}>
+                            {history.map((h, index) => (
+                                <View key={index} style={styles.historyRow}>
+                                    <Text style={styles.historyTime}>{h.time}</Text>
+                                    <Text style={styles.historyPrice}>NT$ {h.price.toLocaleString()}</Text>
+                                </View>
+                            ))}
+                        </ScrollView>
+                        <TouchableOpacity
+                            style={styles.closeBtn}
+                            onPress={() => setShowHistory(false)}
+                        >
+                            <Text style={styles.closeBtnText}>關閉</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     )
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#f8f9fa" },
-    titleContainer: { padding: 20, backgroundColor: "#fff" },
-    title: { fontSize: 24, fontWeight: "bold" },
     card: {
         backgroundColor: "#fff",
         borderRadius: 12,
@@ -141,5 +181,47 @@ const styles = StyleSheet.create({
         borderLeftColor: "#ffe3e3",
     },
     deleteText: { color: "#ff4d4f", fontWeight: "bold" },
-    empty: { textAlign: "center", marginTop: 100, color: "#999", fontSize: 16 }
+    empty: { textAlign: "center", marginTop: 100, color: "#999", fontSize: 16 },
+    historyHint: {
+        fontSize: 12,
+        color: "#1a73e8",
+        marginTop: 8,
+        fontStyle: "italic",
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    modalContent: {
+        width: "85%",
+        backgroundColor: "#fff",
+        borderRadius: 20,
+        padding: 20,
+        elevation: 5,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: "bold",
+        marginBottom: 15,
+        textAlign: "center",
+    },
+    historyRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: "#eee",
+    },
+    historyTime: { color: "#666", fontSize: 13 },
+    historyPrice: { fontWeight: "bold", color: "#d93025" },
+    closeBtn: {
+        backgroundColor: "#1a73e8",
+        padding: 12,
+        borderRadius: 8,
+        marginTop: 20,
+        alignItems: "center",
+    },
+    closeBtnText: { color: "#fff", fontWeight: "bold" }
 })
