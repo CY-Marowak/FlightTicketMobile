@@ -18,3 +18,9 @@ export async function deleteTrackedFlight(id: number) {
     const res = await apiClient.delete(`/flights/${id}`)
     return res.data
 }
+
+// 查看票價歷史
+export async function getPriceHistory(flightId: number) {
+    const res = await apiClient.get(`/prices/${flightId}`);
+    return res.data; // 回傳 [{time: "...", price: 100}, ...]
+}

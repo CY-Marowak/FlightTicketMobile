@@ -1,4 +1,3 @@
-// src/constants/Styles.ts
 import { StyleSheet, Platform, StatusBar } from 'react-native';
 
 export const GlobalStyles = StyleSheet.create({

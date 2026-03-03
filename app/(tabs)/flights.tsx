@@ -9,13 +9,12 @@ import {
     StyleSheet,
     SafeAreaView,
     StatusBar,
-    Platform
 } from "react-native"
 
 import { searchFlights } from "../../src/api/searchFlights"
 import { Flight } from "../../src/types/flight"
 import { addTrackedFlight } from "../../src/api/trackedFlights"
-
+import { GlobalStyles } from "../../src/constants/Styles"
 
 export default function FlightsPage() {
     // 預設搜尋值
@@ -59,6 +58,7 @@ export default function FlightsPage() {
             setLoading(false)
         }
     }
+
     async function onTrackFlight(flight: Flight) {
         try {
             setTrackingId(`${flight.airline}-${flight.flight_number}`)
@@ -82,65 +82,69 @@ export default function FlightsPage() {
         }
     }
 
-
+    // 將搜尋表單內容與標題分開處理
     const searchFormHeader = (
-        <View style={styles.formContainer}>
-            <Text style={styles.headerTitle}>搜尋便宜機票</Text>
-
-            <View style={styles.inputGroup}>
-                <Text style={styles.label}>出發地</Text>
-                <TextInput
-                    placeholder="例如: TPE"
-                    value={from}
-                    onChangeText={setFrom}
-                    style={styles.input}
-                    autoCapitalize="characters"
-                />
+        <View style={{ backgroundColor: "#fff" }}>
+            <View style={GlobalStyles.titleContainer}>
+                <Text style={GlobalStyles.pageTitle}>查詢航班</Text>
             </View>
 
-            <View style={styles.inputGroup}>
-                <Text style={styles.label}>目的地</Text>
-                <TextInput
-                    placeholder="例如: NRT"
-                    value={to}
-                    onChangeText={setTo}
-                    style={styles.input}
-                    autoCapitalize="characters"
-                />
+            <View style={styles.formContainer}>
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>出發地</Text>
+                    <TextInput
+                        placeholder="例如: TPE"
+                        value={from}
+                        onChangeText={setFrom}
+                        style={styles.input}
+                        autoCapitalize="characters"
+                    />
+                </View>
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>目的地</Text>
+                    <TextInput
+                        placeholder="例如: NRT"
+                        value={to}
+                        onChangeText={setTo}
+                        style={styles.input}
+                        autoCapitalize="characters"
+                    />
+                </View>
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>出發日期</Text>
+                    <TextInput
+                        placeholder="YYYY-MM-DD"
+                        value={depart}
+                        onChangeText={setDepart}
+                        style={styles.input}
+                    />
+                </View>
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>回程日期 (選填)</Text>
+                    <TextInput
+                        placeholder="YYYY-MM-DD"
+                        value={returnDate}
+                        onChangeText={setReturnDate}
+                        style={styles.input}
+                    />
+                </View>
+
+                <TouchableOpacity style={styles.searchButton} onPress={onSearch}>
+                    <Text style={styles.buttonText}>搜尋航班</Text>
+                </TouchableOpacity>
+
+                {loading && <ActivityIndicator size="large" color="#1a73e8" style={{ marginTop: 20 }} />}
+                {error && <Text style={styles.errorText}>{error}</Text>}
+                {message && <Text style={styles.messageText}>{message}</Text>}
             </View>
-
-            <View style={styles.inputGroup}>
-                <Text style={styles.label}>出發日期</Text>
-                <TextInput
-                    placeholder="YYYY-MM-DD"
-                    value={depart}
-                    onChangeText={setDepart}
-                    style={styles.input}
-                />
-            </View>
-
-            <View style={styles.inputGroup}>
-                <Text style={styles.label}>回程日期 (選填)</Text>
-                <TextInput
-                    placeholder="YYYY-MM-DD"
-                    value={returnDate}
-                    onChangeText={setReturnDate}
-                    style={styles.input}
-                />
-            </View>
-
-            <TouchableOpacity style={styles.searchButton} onPress={onSearch}>
-                <Text style={styles.buttonText}>搜尋航班</Text>
-            </TouchableOpacity>
-
-            {loading && <ActivityIndicator size="large" color="#1a73e8" style={{ marginTop: 20 }} />}
-            {error && <Text style={styles.errorText}>{error}</Text>}
-            {message && <Text style={styles.messageText}>{message}</Text>}
         </View>
     );
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={GlobalStyles.safeArea}>
             <StatusBar barStyle="dark-content" />
             <FlatList
                 data={flights}
@@ -160,7 +164,6 @@ export default function FlightsPage() {
                             <Text style={styles.timeText}>時間：{item.depart_time} → {item.arrival_time}</Text>
 
                             <View style={styles.cardBottom}>
-                                {/* 重點 2：移除 priceText 的 textAlign: "right"，改用 View 佈局 */}
                                 <Text style={styles.priceText}>NT$ {item.price.toLocaleString()}</Text>
 
                                 <TouchableOpacity
@@ -171,7 +174,8 @@ export default function FlightsPage() {
                                     {isTracking ? (
                                         <ActivityIndicator size="small" color="#fff" />
                                     ) : (
-                                        <Text style={styles.trackButtonText}>追蹤價格</Text>
+                                        <Text style={styles.trackButtonText}>追蹤航班
+                                        </Text>
                                     )}
                                 </TouchableOpacity>
                             </View>
@@ -187,21 +191,12 @@ export default function FlightsPage() {
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: "#fff",
-    },
     formContainer: {
-        padding: 20,
+        paddingHorizontal: 20,
+        paddingBottom: 20,
         backgroundColor: "#fff",
         borderBottomWidth: 8,
-        borderColor: "#f0f2f5", // 視覺分割線
-    },
-    headerTitle: {
-        fontSize: 24,
-        fontWeight: "bold",
-        marginBottom: 20,
-        color: "#000",
+        borderColor: "#f0f2f5",
     },
     inputGroup: {
         marginBottom: 15,
@@ -243,7 +238,7 @@ const styles = StyleSheet.create({
         borderTopColor: "#f0f0f0",
     },
     trackButton: {
-        backgroundColor: "#34a853", // 綠色代表追蹤
+        backgroundColor: "#34a853",
         paddingHorizontal: 15,
         paddingVertical: 8,
         borderRadius: 20,
@@ -271,7 +266,6 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 1,
         borderColor: "#eee",
-        // 卡片陰影
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
