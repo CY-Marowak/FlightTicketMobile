@@ -8,7 +8,7 @@ export interface LoginResponse {
 }
 
 export interface Profile {
-    id: number
+    user_id: number
     username: string
     created_at: string
 }
