@@ -7,3 +7,9 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
     return res.data
 }
 
+//µù¥U
+export async function register(username: string, password: string) {
+    const res = await apiClient.post("/register", { username, password });
+    return res.data;
+}
+
