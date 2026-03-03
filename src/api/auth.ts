@@ -1,12 +1,9 @@
-import api from "./client"
-import { LoginRequest, LoginResponse, Profile } from "../types/auth"
+import apiClient from "../utils/apiClient"
+import { LoginRequest, LoginResponse } from "../types/auth"
 
+//µn¤J
 export async function login(data: LoginRequest): Promise<LoginResponse> {
-    const res = await api.post("/login", data)
+    const res = await apiClient.post("/login", data)
     return res.data
 }
 
-export async function fetchProfile(): Promise<Profile> {
-    const res = await api.get("/profile")
-    return res.data
-}
