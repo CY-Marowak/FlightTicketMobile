@@ -113,7 +113,8 @@ export default function TrackedPage() {
                     data={flights}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
-                    contentContainerStyle={{ padding: 15 }}
+                    contentContainerStyle={{ padding: 15, paddingBottom: 100 }} // 增加底部內距
+                    removeClippedSubviews={true} // 優化效能
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={() => {
                             setRefreshing(true)
@@ -157,12 +158,12 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 15,
         flexDirection: "row",
-        alignItems: "center",
         elevation: 2,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 3,
+        overflow: "hidden", // 確保按鈕不會超出卡片
     },
     cardMain: { flex: 1, padding: 15 },
     header: { flexDirection: "row", justifyContent: "space-between", marginBottom: 5 },
@@ -172,10 +173,10 @@ const styles = StyleSheet.create({
     time: { color: "#444", marginTop: 5 },
     deleteBtn: {
         backgroundColor: "#fff5f5",
-        height: "100%",
+        alignSelf: "stretch", // 自動撐開
         paddingHorizontal: 20,
         justifyContent: "center",
-        borderTopRightRadius: 12,
+        alignItems: "center", // 文字置中
         borderBottomRightRadius: 12,
         borderLeftWidth: 1,
         borderLeftColor: "#ffe3e3",

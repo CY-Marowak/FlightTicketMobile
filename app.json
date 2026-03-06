@@ -11,11 +11,20 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-    "softwareKeyboardLayoutMode": "pan"
+      "softwareKeyboardLayoutMode": "pan",
+      "package": "com.caydenyang.FlightTicketMobile"
     },
     "plugins": [
       "expo-router"
     ],
-    "scheme": "flightticket"
+    "scheme": "flightticket",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "338dc6a4-6f01-4008-8f69-c6981e8d6e89"
+      }
+    }
   }
 }
