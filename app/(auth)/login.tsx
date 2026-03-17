@@ -2,7 +2,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityInd
 import { useState } from "react"
 import { useRouter } from "expo-router"
 import { useAuth } from "../../src/auth/useAuth"
-import { register } from "../../src/api/auth" // 引入剛寫的註冊 API
+import { register } from "../../src/api/auth" 
 
 export default function Login() {
     const { login } = useAuth()
@@ -18,11 +18,20 @@ export default function Login() {
         if (!username || !password) return setError("請輸入帳號密碼");
         setLoading(true);
         setError("");
+
         try {
             await login(username, password)
-            router.replace("/")
         } catch (e: any) {
-            setError(e.response?.data?.error || "登入失敗，請檢查帳號密碼")
+            if (e.response) {
+                const serverErrorMessage = e.response.data?.error || e.response.data?.message;
+                setError(serverErrorMessage || "伺服器錯誤");
+            } else if (e.request) {
+                // 請求已送出，但沒收到回應 (伺服器沒開、網路斷線)
+                setError("連不上伺服器，請確認網路或稍後再試")
+            } else {
+                // 設定請求時發生其他錯誤
+                setError("發生未知錯誤，請稍後再試")
+            }
         } finally {
             setLoading(false);
         }
@@ -48,7 +57,7 @@ export default function Login() {
             <View style={styles.headerBox}>
                 <Text style={styles.logoText}>✈️</Text>
                 <Text style={styles.title}>FlightTracker</Text>
-                <Text style={styles.subtitle}>便宜機票追蹤器</Text>
+                <Text style={styles.subtitle}>便宜機票追蹤</Text>
             </View>
 
             <View style={styles.inputCard}>
