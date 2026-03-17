@@ -37,14 +37,12 @@ export default function TrackedPage() {
         }
     }
 
-    // 每次切換回此 Tab 時都會重新抓取
     useFocusEffect(
         useCallback(() => {
             fetchFlights()
         }, [])
     )
 
-    // 處理刪除
     const handleDelete = (id: number) => {
         Alert.alert("取消追蹤", "確定要刪除此航班嗎？", [
             { text: "取消", style: "cancel" },
@@ -63,7 +61,6 @@ export default function TrackedPage() {
         ])
     }
 
-    // 處理查看歷史
     const handleViewHistory = async (id: number) => {
         try {
             const data = await getPriceHistory(id)
@@ -77,9 +74,13 @@ export default function TrackedPage() {
 
     const renderItem = ({ item }: { item: TrackedFlight }) => (
         <View style={styles.card}>
+            {/* 主卡片區：預留給未來跳轉訂票頁面使用 */}
             <TouchableOpacity
                 style={styles.cardMain}
-                onPress={() => handleViewHistory(item.id)} // [點擊卡片查看歷史]
+                onPress={() => {
+                    console.log("跳轉至訂票頁面:", item.flight_number)
+                    // 目前保留點擊效果但不進行跳轉
+                }}
             >
                 <View style={styles.header}>
                     <Text style={styles.route}>{item.from} → {item.to}</Text>
@@ -87,21 +88,31 @@ export default function TrackedPage() {
                 </View>
                 <Text style={styles.info}>{item.airline} · {item.flight_number}</Text>
                 <Text style={styles.time}>{item.depart_time} → {item.arrival_time}</Text>
-                <Text style={styles.historyHint}>點擊查看追蹤以來價格趨勢 📈</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-                style={styles.deleteBtn}
-                onPress={() => handleDelete(item.id)}
-            >
-                <Text style={styles.deleteText}>刪除</Text>
-            </TouchableOpacity>
+            {/* 右側操作按鈕區 */}
+            <View style={styles.actionContainer}>
+                {/* 趨勢按鈕 */}
+                <TouchableOpacity
+                    style={styles.historyBtn}
+                    onPress={() => handleViewHistory(item.id)}
+                >
+                    <Text style={styles.historyBtnText}>價格趨勢</Text>
+                </TouchableOpacity>
+
+                {/* 刪除按鈕 */}
+                <TouchableOpacity
+                    style={styles.deleteBtn}
+                    onPress={() => handleDelete(item.id)}
+                >
+                    <Text style={styles.deleteText}>刪除</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     )
 
     return (
         <SafeAreaView style={GlobalStyles.safeArea}>
-
             <View style={GlobalStyles.titleContainer}>
                 <Text style={GlobalStyles.pageTitle}>我的航班</Text>
             </View>
@@ -113,8 +124,8 @@ export default function TrackedPage() {
                     data={flights}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
-                    contentContainerStyle={{ padding: 15, paddingBottom: 100 }} // 增加底部內距
-                    removeClippedSubviews={true} // 優化效能
+                    contentContainerStyle={{ padding: 15, paddingBottom: 100 }}
+                    removeClippedSubviews={true}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={() => {
                             setRefreshing(true)
@@ -126,18 +137,22 @@ export default function TrackedPage() {
                     }
                 />
             )}
-            {/* 歷史票價 Modal */}
+
             <Modal visible={showHistory} animationType="slide" transparent={true}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>價格趨勢歷史</Text>
                         <ScrollView style={{ maxHeight: 300 }}>
-                            {history.map((h, index) => (
-                                <View key={index} style={styles.historyRow}>
-                                    <Text style={styles.historyTime}>{h.time}</Text>
-                                    <Text style={styles.historyPrice}>NT$ {h.price.toLocaleString()}</Text>
-                                </View>
-                            ))}
+                            {history.length > 0 ? (
+                                history.map((h, index) => (
+                                    <View key={index} style={styles.historyRow}>
+                                        <Text style={styles.historyTime}>{h.time}</Text>
+                                        <Text style={styles.historyPrice}>NT$ {h.price.toLocaleString()}</Text>
+                                    </View>
+                                ))
+                            ) : (
+                                <Text style={{ textAlign: 'center', padding: 20, color: '#999' }}>尚無歷史數據</Text>
+                            )}
                         </ScrollView>
                         <TouchableOpacity
                             style={styles.closeBtn}
@@ -163,31 +178,70 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 3,
-        overflow: "hidden", // 確保按鈕不會超出卡片
+        overflow: "hidden",
     },
-    cardMain: { flex: 1, padding: 15 },
-    header: { flexDirection: "row", justifyContent: "space-between", marginBottom: 5 },
-    route: { fontSize: 18, fontWeight: "bold" },
-    price: { fontSize: 18, fontWeight: "bold", color: "#d93025" },
-    info: { color: "#666", fontSize: 14 },
-    time: { color: "#444", marginTop: 5 },
+    cardMain: {
+        flex: 1,
+        padding: 15
+    },
+    header: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginBottom: 5
+    },
+    route: {
+        fontSize: 16,
+        fontWeight: "bold"
+    },
+    price: {
+        fontSize: 16,
+        fontWeight: "bold",
+        color: "#d93025"
+    },
+    info: {
+        color: "#666",
+        fontSize: 13
+    },
+    time: {
+        color: "#444",
+        marginTop: 5,
+        fontSize: 13
+    },
+    actionContainer: {
+        flexDirection: "row", // 按鈕水平併排，若想垂直請改為 column
+        alignItems: "stretch",
+    },
+    historyBtn: {
+        backgroundColor: "#f0f7ff",
+        paddingHorizontal: 15,
+        justifyContent: "center",
+        alignItems: "center",
+        borderLeftWidth: 1,
+        borderLeftColor: "#e1effe",
+    },
+    historyBtnText: {
+        color: "#1a73e8",
+        fontWeight: "bold",
+        fontSize: 14,
+    },
     deleteBtn: {
         backgroundColor: "#fff5f5",
-        alignSelf: "stretch", // 自動撐開
-        paddingHorizontal: 20,
+        paddingHorizontal: 15,
         justifyContent: "center",
-        alignItems: "center", // 文字置中
-        borderBottomRightRadius: 12,
+        alignItems: "center",
         borderLeftWidth: 1,
         borderLeftColor: "#ffe3e3",
     },
-    deleteText: { color: "#ff4d4f", fontWeight: "bold" },
-    empty: { textAlign: "center", marginTop: 100, color: "#999", fontSize: 16 },
-    historyHint: {
-        fontSize: 12,
-        color: "#1a73e8",
-        marginTop: 8,
-        fontStyle: "italic",
+    deleteText: {
+        color: "#ff4d4f",
+        fontWeight: "bold",
+        fontSize: 14,
+    },
+    empty: {
+        textAlign: "center",
+        marginTop: 100,
+        color: "#999",
+        fontSize: 16
     },
     modalOverlay: {
         flex: 1,
@@ -215,8 +269,14 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: "#eee",
     },
-    historyTime: { color: "#666", fontSize: 13 },
-    historyPrice: { fontWeight: "bold", color: "#d93025" },
+    historyTime: {
+        color: "#666",
+        fontSize: 13
+    },
+    historyPrice: {
+        fontWeight: "bold",
+        color: "#d93025"
+    },
     closeBtn: {
         backgroundColor: "#1a73e8",
         padding: 12,
@@ -224,5 +284,8 @@ const styles = StyleSheet.create({
         marginTop: 20,
         alignItems: "center",
     },
-    closeBtnText: { color: "#fff", fontWeight: "bold" }
+    closeBtnText: {
+        color: "#fff",
+        fontWeight: "bold"
+    }
 })
