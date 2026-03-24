@@ -3,6 +3,7 @@ import { useState } from "react"
 import { useRouter } from "expo-router"
 import { useAuth } from "../../src/auth/useAuth"
 import { register } from "../../src/api/auth" 
+import { registerForPushNotificationsAsync } from "../../src/services/notifications";
 
 export default function Login() {
     const { login } = useAuth()
@@ -20,7 +21,17 @@ export default function Login() {
         setError("");
 
         try {
-            await login(username, password)
+            // 嘗試獲取 Expo Push Token
+            let pushToken = null;
+            try {
+                pushToken = await registerForPushNotificationsAsync();
+            } catch (tokenErr) {
+                console.log("無法取得推播 Token:", tokenErr);
+            }
+            //呼叫登入 API，把 push_token 塞進去
+            await login(username, password, pushToken);
+
+            router.replace("/")
         } catch (e: any) {
             if (e.response) {
                 const serverErrorMessage = e.response.data?.error || e.response.data?.message;
