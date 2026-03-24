@@ -13,11 +13,13 @@ export interface LoginResponse {
 
 export async function loginApi(
     username: string,
-    password: string
+    password: string,
+    pushToken?: string | null
 ): Promise<LoginResponse> {
     const res = await api.post("/login", {
         username,
         password,
+        push_token: pushToken
     })
     return res.data
 }

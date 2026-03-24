@@ -43,7 +43,7 @@ export default function NotificationsPage() {
             </View>
             <View style={styles.notifBody}>
                 <View style={styles.notifHeader}>
-                    <Text style={styles.notifTime}>{item.time}</Text>
+                    <Text style={styles.notifTime}>{new Date(item.time).toLocaleString("zh-TW")}</Text>
                     <Text style={styles.notifPrice}>NT$ {item.price.toLocaleString()}</Text>
                 </View>
                 <Text style={styles.notifMessage}>{item.message}</Text>

@@ -146,7 +146,7 @@ export default function TrackedPage() {
                             {history.length > 0 ? (
                                 history.map((h, index) => (
                                     <View key={index} style={styles.historyRow}>
-                                        <Text style={styles.historyTime}>{h.time}</Text>
+                                        <Text style={styles.historyTime}>{new Date(h.time).toLocaleString("zh-TW")}</Text>
                                         <Text style={styles.historyPrice}>NT$ {h.price.toLocaleString()}</Text>
                                     </View>
                                 ))
