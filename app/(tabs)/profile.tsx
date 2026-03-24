@@ -88,7 +88,6 @@ export default function ProfilePage() {
                     </View>
                     <View style={styles.infoRow}>
                         <Text style={styles.infoLabel}>註冊時間</Text>
-                        {/*<Text style={styles.infoValue}>{user?.created_at}</Text>*/}
                         <Text style={styles.infoValue}>{new Date(user?.created_at).toLocaleString("zh-TW")}</Text>
                     </View>
                 </View>

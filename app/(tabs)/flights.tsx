@@ -66,8 +66,8 @@ export default function FlightsPage() {
                 ...flight,
                 from: flight.from,          // 滿足後端 required_fields 檢查
                 to: flight.to,
-                from_airport: flight.from,  // 滿足後端 SQL 寫入 (INSERT INTO)
-                to_airport: flight.to       // 滿足後端 SQL 寫入 (INSERT INTO)
+                from_airport: flight.from,  
+                to_airport: flight.to       
             };
 
             await addTrackedFlight(payload as any);
