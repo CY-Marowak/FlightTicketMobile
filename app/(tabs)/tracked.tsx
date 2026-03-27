@@ -10,12 +10,17 @@ import {
     Alert,
     RefreshControl,
     Modal,
-    ScrollView
+    ScrollView,
+    Dimensions
 } from "react-native"
 import { useFocusEffect } from "expo-router"
+import { LineChart } from "react-native-chart-kit"
 import { getTrackedFlights, deleteTrackedFlight, getPriceHistory } from "../../src/api/trackedFlights"
 import { TrackedFlight } from "../../src/types/flight"
 import { GlobalStyles } from "../../src/constants/Styles"
+
+// 取得螢幕寬度供圖表使用
+const screenWidth = Dimensions.get("window").width;
 
 export default function TrackedPage() {
     const [flights, setFlights] = useState<TrackedFlight[]>([])
@@ -42,6 +47,36 @@ export default function TrackedPage() {
             fetchFlights()
         }, [])
     )
+
+    const getChartData = () => {
+        if (history.length === 0) return null;
+        // 為了不讓 X 軸文字擠死，我們只挑選 5 個時間標籤
+        const step = Math.ceil(history.length / 5)
+        
+        return {
+            labels: history.map((h, i) => 
+                i % step === 0 ? new Date(h.time).toLocaleDateString("zh-TW", { month: 'numeric', day: 'numeric' }) : ""
+            ),
+            datasets: [
+                {
+                    data: history.map(h => h.price),
+                    color: (opacity = 1) => `rgba(26, 115, 232, ${opacity})`, // Google Blue
+                    strokeWidth: 2 
+                }
+            ],
+        }
+    }
+
+    const chartConfig = {
+        backgroundColor: "#fff",
+        backgroundGradientFrom: "#fff",
+        backgroundGradientTo: "#fff",
+        decimalPlaces: 0, // 價格不顯示小數點
+        color: (opacity = 1) => `rgba(26, 115, 232, ${opacity})`,
+        labelColor: (opacity = 1) => `rgba(102, 102, 102, ${opacity})`,
+        style: { borderRadius: 16 },
+        propsForDots: { r: "4", strokeWidth: "2", stroke: "#1a73e8" }
+    }
 
     const handleDelete = (id: number) => {
         Alert.alert("取消追蹤", "確定要刪除此航班嗎？", [
@@ -138,10 +173,31 @@ export default function TrackedPage() {
                 />
             )}
 
-            <Modal visible={showHistory} animationType="slide" transparent={true}>
+            <Modal visible={showHistory} animationType="fade" transparent={true}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>價格趨勢歷史</Text>
+
+                        {history.length > 1 ? (
+                            <View style={{ alignItems: 'center', marginBottom: 20 }}>
+                                <LineChart
+                                    data={getChartData()!}
+                                    width={screenWidth * 0.75} // Modal 寬度約 85%，圖表再縮一點
+                                    height={200}
+                                    chartConfig={chartConfig}
+                                    bezier // 讓線條變平滑（貝茲曲線）
+                                    style={{
+                                        marginVertical: 8,
+                                        borderRadius: 16
+                                    }}
+                                    fromZero={false}
+                                />
+                            </View>
+                        ) : history.length === 1 ? (
+                            <Text style={styles.onlyOneData}>目前只有一筆紀錄，無法產生趨勢圖</Text>
+                        ) : null}
+
+                        <Text style={[styles.modalTitle, { fontSize: 14, marginTop: 10 }]}>詳細記錄</Text>
                         <ScrollView style={{ maxHeight: 300 }}>
                             {history.length > 0 ? (
                                 history.map((h, index) => (
@@ -154,6 +210,7 @@ export default function TrackedPage() {
                                 <Text style={{ textAlign: 'center', padding: 20, color: '#999' }}>尚無歷史數據</Text>
                             )}
                         </ScrollView>
+
                         <TouchableOpacity
                             style={styles.closeBtn}
                             onPress={() => setShowHistory(false)}
@@ -276,6 +333,14 @@ const styles = StyleSheet.create({
     historyPrice: {
         fontWeight: "bold",
         color: "#d93025"
+    },
+    onlyOneData: {
+        textAlign: 'center',
+        color: '#666',
+        padding: 20,
+        backgroundColor: '#f5f5f5',
+        borderRadius: 10,
+        marginBottom: 10
     },
     closeBtn: {
         backgroundColor: "#1a73e8",
