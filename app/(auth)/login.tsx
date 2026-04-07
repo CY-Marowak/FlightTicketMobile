@@ -25,6 +25,7 @@ export default function Login() {
             let pushToken = null;
             try {
                 pushToken = await registerForPushNotificationsAsync();
+                console.log("📱 取得的 Token:", pushToken); // <--- 確認手機有沒有抓到
             } catch (tokenErr) {
                 console.log("無法取得推播 Token:", tokenErr);
             }

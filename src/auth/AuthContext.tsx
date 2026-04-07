@@ -88,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [token])
 
     async function login(username: string, password: string, pushToken?: string | null) {
+        console.log("🚀 準備登入，Token 為:", pushToken); // <--- 加這行檢查
         const data = await loginApi(
             username,
             password,
